@@ -10,9 +10,11 @@ I put almost no thought into the generation process and the resulting sessions a
 
 You can tweak the script if you want more or less data.
 
-```python
-python pagefaker.py > out.csv
+```sh
+python scripts/pagefaker.py > data/pageviews.csv
 ```
+
+I could totally rewrite this in Elixir and express it more naturally and performantly (the current implementation takes several minutes to generate a few million pageviews). todo.
 
 ## Running flow
 
@@ -22,18 +24,26 @@ You can either run the test suite
 mix test
 ```
 
-or the `.exs` script, which is easier to tweak and observe:
+or the `.exs` script to time a run for a larger dataset (assumes `data/pageviews.csv` has been populated by `scripts/pagefaker.py`):
 
 ```
-mix run sessionize.exs
+time mix run sessionize.exs
 ```
 
 
 ## Performance
 
-On my machine sessionizing 1.6M pageviews could be sessionized and counted in ~2 seconds. Serializing these to a CSV file took about 20 seconds, so IO is clearly a bottleneck.
+On my machine 1.6M pageviews could be sessionized in about 2.3 seconds, resulting in ~790k sessions.
 
-150 million records would take 100x as long, about half an hour on my laptop. If you parallelized IO with the right batch size you'd likely just be bound by your internet connection-- an EC2 instance writing to S3 should be super speedy, I'd love to test this.
+150 million records would take 100x as long, about 3 minutes on my laptop. Pretty good! One thing to note is that it's critical to pass the `:delayed_write` option to `File.stream!/3`, as [described in the docs](https://hexdocs.pm/elixir/File.html#module-processes-and-raw-files):
+
+>Every time a file is opened, Elixir spawns a new process. Writing to a file is equivalent to sending messages to the process that writes to the file descriptor.
+>
+>This means files can be passed between nodes and message passing guarantees they can write to the same file in a network.
+>
+>However, you may not always want to pay the price for this abstraction. In such cases, a file can be opened in :raw mode. The options :read_ahead and :delayed_write are also useful when operating on large files or working with files in tight loops.
+
+Not doing so results in about a 10x speed penalty as Elixir opens a new process for each write.
 
 There's lots that could be done to make this better and more Elixiry, like using a struct to hold the session info, but the intent is just to show custom window functions using `emit_and_reduce/2` and `on_trigger/1`.
 
@@ -41,7 +51,11 @@ There's lots that could be done to make this better and more Elixiry, like using
 
 Flow is cool! I struggled a bit to represent the sessionization logic (see `lib/sessionize.ex`). I'm sure there are better ways to do so, but I got to "it works" and left it alone, for now.
 
-The interplay between `emit_and_reduce/2` and `on_trigger/1` is obvious to me now, but I spent a bunch of time trying to understand the output of my Flow pipeline. I think the official elixir docs could explain this more clearly for a beginner.
+The interplay between `emit_and_reduce/2` and `on_trigger/1` is obvious to me now, but I spent a bunch of time trying to understand the output of my Flow pipeline. The [Flow.Window](https://hexdocs.pm/flow/Flow.Window.html) documentation mentions session windows, but this was [removed in the 2018 0.14 release](https://github.com/dashbitco/flow/blob/master/CHANGELOG.md#v0140-2018-06-10), which says:
+
+>This release also deprecates Flow.Window.session/3 as developers can trivially roll their own with more customization power and flexibility using emit_and_reduce/3 and on_trigger/2.
+
+I would say it's only somewhat trivial, but I do love the flexibility.
 
 ## Explanation
 

@@ -84,13 +84,13 @@ while now < end:
     if returners.get(now):
         for user in returners[now]:
             user.age = 0
-            user.session_length = int(random.exponential(10))
+            user.session_length = int(random.exponential(20))
             users[user.uuid] = user
 
         del returners[now]
     
     # add some new users
-    num_new_users = random.poisson(1.5)
+    num_new_users = random.poisson(2.0)
     new_users = [User() for _ in range(num_new_users)]
     for user in new_users:
         users[user.uuid] = user
