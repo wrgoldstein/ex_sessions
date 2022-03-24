@@ -27,7 +27,7 @@ mix test
 or the `.exs` script to time a run for a larger dataset (assumes `data/pageviews.csv` has been populated by `scripts/pagefaker.py`):
 
 ```
-time mix run sessionize.exs
+time mix run scripts/sessionize.exs
 ```
 
 

@@ -6,8 +6,8 @@ defmodule Sessionize do
   if by event time they should be in the previous session.
   """
 
-  @session_cutoff 5 * 60 # 5 minutes
-
+  # 5 minutes
+  @session_cutoff 5 * 60
 
   def split([key, time, _, _], state) when state == %{} do
     {[], %{key => [key, 1, time, time]}}

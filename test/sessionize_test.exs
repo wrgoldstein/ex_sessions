@@ -3,8 +3,8 @@ defmodule SessionizeTest do
   doctest Sessionize
 
   setup do
+    # replacing UUIDs with easy to discern names
     data =
-      # replacing UUIDs with easy to discern names
       """
       apple,2020-01-01 00:02:00,pageview,/listing/b
       berry,2020-01-01 00:05:00,pageview,/listing/a
@@ -36,11 +36,11 @@ defmodule SessionizeTest do
 
       expected =
         {[],
-        %{
-          "apple" => ["apple", 3, 120, 480],
-          "berry" => ["berry", 1, 300, 300],
-          "candy" => ["candy", 2, 360, 360]
-        }}
+         %{
+           "apple" => ["apple", 3, 120, 480],
+           "berry" => ["berry", 1, 300, 300],
+           "candy" => ["candy", 2, 360, 360]
+         }}
 
       assert expected == Sessionize.split(new, context.state)
     end
@@ -51,25 +51,26 @@ defmodule SessionizeTest do
       # with the most recent state.
       expected =
         {[["berry", 1, 300, 300]],
-        %{
-          "apple" => ["apple", 2, 120, 360],
-          "berry" => ["berry", 1, 605, 605],
-          "candy" => ["candy", 2, 360, 360]
-        }}
+         %{
+           "apple" => ["apple", 2, 120, 360],
+           "berry" => ["berry", 1, 605, 605],
+           "candy" => ["candy", 2, 360, 360]
+         }}
 
       assert expected == Sessionize.split(new, context.state)
     end
 
     test "begins new session", context do
       new = ["dinner", 375, "pageview", "/listing/c"]
+
       expected =
         {[],
-        %{
-          "apple" => ["apple", 2, 120, 360],
-          "berry" => ["berry", 1, 300, 300],
-          "candy" => ["candy", 2, 360, 360],
-          "dinner" => ["dinner", 1, 375, 375]
-        }}
+         %{
+           "apple" => ["apple", 2, 120, 360],
+           "berry" => ["berry", 1, 300, 300],
+           "candy" => ["candy", 2, 360, 360],
+           "dinner" => ["dinner", 1, 375, 375]
+         }}
 
       assert expected == Sessionize.split(new, context.state)
     end
